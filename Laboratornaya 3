@@ -1,0 +1,110 @@
+#include <stdio.h>
+//для функции Move:
+//1 - вверх, 2 - вправо, 3 - вниз, 4 - влево
+int matrica[8][8];
+
+int ZamenaKoordinatA(int r, int a) {
+    if (r==3)
+        return a+1;
+    else
+        if (r==1)
+            return a-1;
+    return a;
+}
+
+int ZamenaKoordinatB(int r, int b) {
+    if (r==2)
+        return b+1;
+    else
+        if (r==4)
+            return b-1;
+    return b;
+}
+
+int Move(int l, int n, int h, int g) { //функция движения по матрице (первое число - вид хода, второе - номер хода, третье - номер строки, четвертое - номер столбца)
+    if ((l==1) && ((n==1) || (n==2))) // ход вверх
+        if (((h-1)>=0) && (matrica[h-1][g]==11))
+            return 1;
+    else
+        if ((l==1) &&((h-1)>=0) && (matrica[h-1][g]==10))
+            return 1;
+    if ((l==2) && ((n==1) || (n==2))) // ход вправо
+        if (((g+1)<=7) && (matrica[h][g+1]==11))
+            return 1;
+    else
+        if ((l==2) && ((g+1)<=7) && (matrica[h][g+1]==10))
+            return 1;
+    if ((l==3) && ((n==1) || (n==2))) // ход вниз
+        if (((h+1)<=7) && (matrica[h+1][g]==11))
+            return 1;
+    else
+        if ((l==3) && ((h+1)<=7) && (matrica[h+1][g]==10))
+            return 1;
+    if ((l==4) && ((n==1) || (n==2))) // ход влево
+        if (((g-1)>=0) && (matrica[h][g-1]==11))
+            return 1;
+    else
+        if ((l==4) && ((g-1)>=0) && (matrica[h][g-1]==10))
+            return 1;
+}
+
+int ABBA(int mas[8]) { //основная функция
+    int s = 0; //счетчик слов ABBA, подходящих под условие
+    for (int i = 0; i<8;i++) { //перевод в 16-ую и наполнение матрицы всеми числами
+        if (mas[i]<0) {
+            int a = (mas[i]*(-1))-1; // перевод из отрицательного в положительный
+            for (int j = 7; j>-1; j--) { // заполнение матицы для одного числа
+                matrica[i][j] = 15-(a%16);
+                int x = a/16;
+                a = x;
+            }
+        }
+        if (mas[i]>=0) {
+            int a = mas[i];
+            for (int j = 7; j>-1; j--) { // заполнение матрицы для одного числа
+                matrica[i][j] = a%16;
+                int x = a/16;
+                a = x;
+            }
+        }
+    }
+    for (int i = 0; i<8; i++) {
+        for (int j = 0; j<8; j++) { //берем начало отсчета
+            int a = i;
+            int b = j;
+            if (matrica[a][b]== 10) { //  если начало равно 10, т.е. A, то продолжаем
+                for (int t = 1; t<5; t++) { // движение 1
+                    int c = 1; // номер хода
+                    if (Move(t,c,a,b) != 1)
+                        break;
+                    else
+                        a=ZamenaKoordinatA(t,a);
+                        b=ZamenaKoordinatB(t,b);
+                        for (int y = 1; y<5; y++) { // движение 2
+                            c = 2; // номер хода
+                            if(Move(y,c,a,b) != 1)
+                                break;
+                            else
+                                a=ZamenaKoordinatA(y,a);
+                                b=ZamenaKoordinatB(y,b);
+                                for (int u = 1; u<5; u++) { // движение 3
+                                    c = 3; // номер хода
+                                    if (Move(u,c,a,b) != 1)
+                                        break;
+                                    else
+                                        s++;
+                                }
+                        }
+                }
+            }
+            else
+                break;
+        }
+    }
+    return s/2;
+}
+
+int main(int argc, char *argv[])
+{
+    int sample[8] = {-1413863686, -1146374827, -1162027246, -1442185216, 184549376, 11534336, 655360, 179026592};
+    printf("%d", ABBA(sample));
