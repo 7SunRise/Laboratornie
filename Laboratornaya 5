@@ -1,0 +1,123 @@
+#include <stdio.h>
+#include <string.h>
+// Не успел дописать нахождение самого периметра, да и не проверял код на ошибки. Задумка была такова, что снчала мы находим координаты "центра" фигуры. Далее
+// относительно этого центра делим всю координатную плоскость на четверти. После этого сортируем точки по этим четвертям (некоторые точки попадают на границы четвертей),
+// а также сортируем их "внутри четвертей" по тангенсу (прямоугол. треуг. с вершинами: центр, сама точка и перпендикуляр из точки на "границы четвертей").
+// После того,как все отсортировано ищем расстояние между точками, начиная с первой четверти, заканчивая 4-ой четвертью (в зависимости от четверти нужно идти
+// по убыванию или по возрастанию). Складываем полученные расстояния.
+float Tangens(float a, float b, int d) {
+    if (d==1)
+        float e = a - coordcentr[0]; float f = b - coordcentr[1];
+    if (d==2)
+        float e = coordcentr[0] - a; float f = b - coordcentr[1];
+    if (d==3)
+        float e = coordcentr[0] - a; float f = coordcentr[1] - b;
+    if (d==4)
+        float e = a - coordcentr[0]; float f = coordcentr[1] - b;
+    return f/e;
+}
+
+float Perimetr(float coord[], int n) {
+    float u = 0;                                                               //ответ, который будет выводиться
+    float coordcentr[] = 0;                                                            // примерные координаты центра фигуры (max + min) делить на 2
+    float maxx = 0; float maxy = 0; float minx = 0; float miny = 0;                   //минимальные координаты x и y соответственно
+    int a1 = 0; int a2 = 0; int a3 = 0; int a4 =0;                                   //количество точек в 1-ой, 2-ой, 3-ей и 4-ой четверти соответственно
+    float coord1[] = 0; float coord2[0] = 0; float coord3[] = 0; float coord4[] = 0;//координаты точек в каждой четверти (далле будет расстановлено в порядке возрастания)
+    float up[] = 0; float down[] = 0; float right[] = 0; float left[] = 0;                // координаты которые строго над, под, справа и слева от центра
+    for (int i = 0;i<2*n; i++) {            // находим минимальное и максимальное x и y
+        if ((coord[i]>maxx) && (i % 2 == 0))
+            maxx = coord[i];
+        if ((coord[i]>maxy) && (i % 2 == 1))
+            maxy = coord[i];
+        if ((coord[i]<minx) && (i & 2 == 0))
+            minx = coord[i];
+        if ((coord[i]<miny) && (i % 2 == 1))
+            miny = coord[i];
+    }
+    coordcentr[0] = (maxx + minx) / 2; coordcentr[1] = (maxy+miny) / 2;
+    for (int i = 0; i<2*n; i+2) {                 // распределяем координаты по четвертям
+        if ((coord[i] > coordcentr[0]) && (coord[i+1] > coordcentr[1]))
+            coord1[(a1*2)] = coord[i]; coord1[(a1*2)+1] = coord[i+1]; a1++;
+        if ((coord[i] < coordcentr[0]) && (coord[i+1] > coordcentr[1]))
+            coord2[(a2*2)] = coord[i]; coord2[(a2*2)+1] = coord[i+1]; a2++;
+        if ((coord[i] < coordcentr[0]) && (coord[i+1] < coordcentr[1]))
+            coord3[(a3*2)] = coord[i]; coord3[(a3*2)+1] = coord[i+1]; a3++;
+        if ((coord[i] > coordcentr[0]) && (coord[i+1] < coordcentr[1]))
+            coord4[(a4*2)] = coord[i]; coord4[(a4*2)+1] = coord[i+1]; a4++;
+        if (coord[i] == coordcentr[0]) {
+            if (coord[i+1] > coordcentr[1])
+                up[0] = coord[i]; up[1] = coord[i+1];
+            else
+                down[0] = coord[i]; down[1] = coord[i+1];
+        }
+        if (coord[i+1] == coordcentr[1]) {
+            if (coord[i] > coordcentr[0])
+                right[0] = coord[i]; right[1] = coord[i+1];
+            else
+                left[0] = coord[i]; left[1] = coord[i+1];
+        }
+    }
+    for (int i = 0;i<sizeof(coord1);i+2){                // перестановка для 1 четверти
+        for (int t = i+2; t<=sizeof(coord1)-1;t+2) {
+            int k = i;
+            if ((Tangens(coord1[i],coord1[i+1],1) < Tangens(coord1[t],coord1[t+1],1)) && (Tangens(coord1[i],coord1[i+1],1) > Tangens(coord1[t],coord1[t+1],1)))
+                float h =coord1[i]; float j = coord1[i+1];
+            while(k!=t) {
+                coord1[k] = coord1[k+2];
+                coord1[k+1] = coord1[k+3];
+                k = k+2;
+            }
+            coord1[t] = h; coord1[t+1] = j;
+            k = i;
+        }
+    }
+    for (int i = 0;i<sizeof(coord2);i+2){                       //перестановка для 2-ой четверти
+        for (int t = i+2; t<=sizeof(coord2)-1;t+2) {
+            int k = i;
+            if ((Tangens(coord2[i],coord2[i+1],2) < Tangens(coord2[t],coord2[t+1],2)) && (Tangens(coord2[i],coord2[i+1],2) > Tangens(coord2[t],coord2[t+1],2)))
+                float h =coord2[i]; float j = coord2[i+1];
+            while(k!=t) {
+                coord2[k] = coord2[k+2];
+                coord2[k+1] = coord2[k+3];
+                k = k+2;
+            }
+            coord2[t] = h; coord2[t+1] = j;
+            k = i;
+        }
+    }
+    for (int i = 0;i<sizeof(coord3);i+2){                       //перестановка для 3-ей четверти
+        for (int t = i+2; t<=sizeof(coord3)-1;t+2) {
+            int k = i;
+            if ((Tangens(coord3[i],coord3[i+1],3) < Tangens(coord3[t],coord3[t+1],3)) && (Tangens(coord3[i],coord3[i+1],3) > Tangens(coord3[t],coord3[t+1],3)))
+                float h =coord3[i]; float j = coord3[i+1];
+            while(k!=t) {
+                coord3[k] = coord3[k+2];
+                coord3[k+1] = coord3[k+3];
+                k = k+2;
+            }
+            coord3[t] = h; coord3[t+1] = j;
+            k = i;
+        }
+    }
+    for (int i = 0;i<sizeof(coord4);i+2){                       // перестановка для 4-ой четверти
+        for (int t = i+2; t<=sizeof(coord4)-1;t+2) {
+            int k = i;
+            if ((Tangens(coord4[i],coord4[i+1],4) < Tangens(coord4[t],coord4[t+1],4)) && (Tangens(coord4[i],coord4[i+1],4) > Tangens(coord4[t],coord4[t+1],4)))
+                float h =coord4[i]; float j = coord4[i+1];
+            while(k!=t) {
+                coord4[k] = coord4[k+2];
+                coord4[k+1] = coord4[k+3];
+                k = k+2;
+            }
+            coord4[t] = h; coord4[t+1] = j;
+            k = i;
+        }
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    int n = 4;
+    float coord[] = {1,5,7,1,7,5,1,1};
+    printf("%f", Perimetr(coord,n));
+}
